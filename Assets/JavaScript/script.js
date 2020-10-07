@@ -58,7 +58,69 @@ $(document).ready(function () {
             cityName.append(tempData);
             $("container").append(cityName);
 
+            //ajax call for UV Index
+            var latitude = response.coord.lat;
+            var longitude = response.coord.lon;
+            var uvIndexURL = "https://api.openweathermap.org/data/2.5/uvi?" + APIKey + "&lat=" + latitude + "&lon=" + longitude;
+            
+            $.ajax({
+                url: uvIndexURL,
+                method: "GET",
+            }).then(function (UVinfo) {
+                var currentUV = $("<div>").addClass('detail uv-index').text("UV Index: ");
+                var uvValue = $("#current-uv-level").text(UVinfo.value);
+                currentUV.append(uvValue);
+                if (UVinfo.value < 3) {
+                    $(uvValue).addClass("uv-low");
+                } else if (UVinfo.value < 6) {
+                    $(uvValue).addClass("uv-mild");
+                } else if (UVinfo.value < 8) {
+                    $(uvValue).addClass("uv-warning");
+                } else if (UVinfo.value < 11) {
+                    $(uvValue).addClass("uv-high");
+                } else if (UVinfo.value >= 11) {
+                    $(uvValue).addClass("uv-extreme");
+                }
+                cityName.append(currentUV);
+                renderSearchList();
+            })
 
+            //start 5 day forecast ajax
+            var forecastURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + latitude + "&lon=" + longitude + "&units=imperial" + APIKey;
+
+            for (var i = 1; i < 6; i++) {
+                $.ajax({
+                    url: forecastURL,
+                    method: "GET",
+                }).then(function (response5Day) {
+                    var cardbodyElem = $("<div>").addClass("card-body");
+
+                    var fiveDayCard = $("<div>").addClass(".cardbody");
+                    var fiveDate = $("<h5>").text(moment.unix(response5Day.daily[i].dt).format("MM/DD/YYYY"));
+                    fiveDayCard.addClass("headline");
+
+                    var fiveDayTemp = $("<p>").text("Temp: " + response5Day.daily[i].temp.max + "°");
+                    fiveDayTemp.attr("id", "#fiveDayTemp[i]");
+
+                    var fiveHumidity = $("<p>").attr("id", "humDay").text("Humidity: " + JSON.stringify(response5Day.daily[i].humidity) + "%");
+                    fiveHumidity.attr("id", "#fiveHumidity[i]");
+
+                    var iconCode = response5Day.daily[i].weather[0].icon;
+                    var iconURL = "https://openweathermap.org/img/w/" + iconCode + ".png";
+                    var weatherImgDay = $("<img>").attr("src", iconURL);
+                    $("#testImage").attr("src", iconURL);
+
+                    cardbodyElem.append(fiveDate);
+                    cardbodyElem.append(weatherImgDay);
+                    cardbodyElem.append(fiveDayTemp);
+                    cardbodyElem.append(fiveHumidity);
+                    fiveDayCard.append(cardbodyElem);
+                    $("#forecast").append(fiveDayCard);
+                    $("#fiveDayTemp[i]").empty();
+                    $(".jumbotron").append(cardbodyElem);
+                })
+            }
+            $("#search").val("");
 
         })
 
@@ -68,5 +130,20 @@ $(document).ready(function () {
         var citySearch = $(this).text();
         btnSearch(citySearch);
     });
+
+    function renderSearchList() {
+        var searchList = JSON.parse(localStorage.getItem("cities"));
+        $("#search-list").empty();
+        if (searchList) {
+            for (i = 0; i < searchList.length; i++) {
+                var listBtn = $("<button>").addClass("btn btn-secondary city-btn").attr('id', 'cityname_' + (i + 1)).text(searchList[i]);
+                var listElem = $("<li>").attr('class', 'list-group-item');
+                listElem.append(listBtn);
+                $("#search-list").append(listElem);
+            }
+
+        }
+
+    }
 
 })
