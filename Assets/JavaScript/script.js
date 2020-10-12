@@ -1,4 +1,3 @@
-//define details and key
 var city = $(".city");
 var wind = $(".wind");
 var humidity = $(".humidity");
