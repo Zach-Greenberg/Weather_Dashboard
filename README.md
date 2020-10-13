@@ -19,4 +19,4 @@ Languages used were JQuery, Openweathermap API, MomentJS library, and Bootstrap
 ## Img
 
 
-![Weather](Assets\img\dashboard.png)
+![Weather](./Assets/img/dashboard.png)
